@@ -19,6 +19,10 @@ npm start                 # http://127.0.0.1:3000
 | [`examples/add_databases.csv`](db2-genius-chat/examples/add_databases.csv) | Bulk-import template for Genius Hub connection profiles |
 | [`test_granite.py`](test_granite.py) | Check the Granite LLM endpoint |
 
+<img width="1536" height="1024" alt="image" src="https://github.com/user-attachments/assets/b0275012-d045-4b3f-9046-a05f15de85b3" />
+
+
+
 Background for Genius Hub MCP and Air-gap:
 
 Details on the MCP
