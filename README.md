@@ -12,7 +12,7 @@ cp .env.example .env      # then edit the values
 npm start                 # http://127.0.0.1:3000
 ```
 
-| In the project | What it is |
+| File | What it is |
 |---|---|
 | [`README.md`](db2-genius-chat/README.md) | How MCP works, connecting, running, design notes, troubleshooting |
 | [`examples/call_tool.py`](db2-genius-chat/examples/call_tool.py) | Call one MCP tool from Python |
