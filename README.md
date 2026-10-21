@@ -18,3 +18,11 @@ npm start                 # http://127.0.0.1:3000
 | [`examples/call_tool.py`](db2-genius-chat/examples/call_tool.py) | Call one MCP tool from Python |
 | [`examples/add_databases.csv`](db2-genius-chat/examples/add_databases.csv) | Bulk-import template for Genius Hub connection profiles |
 | [`test_granite.py`](test_granite.py) | Check the Granite LLM endpoint |
+
+Background for Genius Hub MCP and Air-gap:
+
+Details on the MCP
+	https://community.ibm.com/community/user/blogs/krishna-guntuka/2026/06/30/give-your-ai-assistant-a-direct-line-to-ibm-db2
+
+Air-gapped
+https://community.ibm.com/community/user/blogs/merlin-moncy/2026/05/26/air-gapped-ai-inferencing-db2-genius-hub
