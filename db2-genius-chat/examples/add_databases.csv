@@ -1,0 +1,6 @@
+name,host,port,databaseName,location,dataServerType,dataServerExternalType,URL,xtraProps,comment,tag
+prod-orders,db2prod01.example.com,50000,ORDERS,,DB2LUW,DB2LUW,jdbc:db2://db2prod01.example.com:50000/ORDERS:retrieveMessagesFromServerOnGetMessage=true;,,Order management - production,production
+prod-customers,db2prod01.example.com,50000,CUSTDB,,DB2LUW,DB2LUW,jdbc:db2://db2prod01.example.com:50000/CUSTDB:retrieveMessagesFromServerOnGetMessage=true;,,Customer master data - production,production
+prod-warehouse,db2prod02.example.com,50000,DWH,,DB2LUW,DB2LUW,jdbc:db2://db2prod02.example.com:50000/DWH:retrieveMessagesFromServerOnGetMessage=true;,,Data warehouse - production,production
+test-orders,db2test01.example.com,50000,ORDERS,,DB2LUW,DB2LUW,jdbc:db2://db2test01.example.com:50000/ORDERS:retrieveMessagesFromServerOnGetMessage=true;,,Order management - test,test
+dev-sample,db2dev01.example.com,25010,SAMPLE,,DB2LUW,DB2LUW,jdbc:db2://db2dev01.example.com:25010/SAMPLE:retrieveMessagesFromServerOnGetMessage=true;,,Db2 SAMPLE database - development,development

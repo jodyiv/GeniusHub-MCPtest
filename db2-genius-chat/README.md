@@ -90,6 +90,29 @@ To use the *same* MCP server from IBM Bob or another client, add to `.bob/mcp.js
 }
 ```
 
+### Adding databases to Genius Hub
+
+MCP has no database list of its own: it exposes the connection profiles defined in Genius Hub
+(`fetch_dic_db_profiles`). Add databases there and they appear in this app's dropdown after you press the reload button.
+
+[`examples/add_databases.csv`](examples/add_databases.csv) is a bulk-import template. Replace the example hosts
+with your own, then in Genius Hub go to **Administration > Connection profile > New connection > Import connections
+from file**, select the CSV and pick the profiles to add.
+
+| Column | Value |
+|---|---|
+| `name` | Profile name shown in MCP and in this app's dropdown (unique) |
+| `host`, `port`, `databaseName` | Where the Db2 database lives |
+| `dataServerType`, `dataServerExternalType` | `DB2LUW` (Db2 on Linux, Unix and Windows) |
+| `URL` | `jdbc:db2://<host>:<port>/<database>:retrieveMessagesFromServerOnGetMessage=true;` |
+| `comment`, `tag` | Optional; tags help group databases |
+| `location`, `xtraProps` | Leave empty |
+
+The file holds no passwords. After importing, set each database's monitoring (data collection) credential with
+**Update credentials** on the Connection profile page; until then Genius Hub, and therefore MCP, cannot read it.
+To see the exact format for your version, export your existing profiles first:
+`GET /dbapi/v4/dbprofiles/transfer/export` (add `?json=true` for JSON).
+
 ### Use it from Python
 
 [`examples/call_tool.py`](examples/call_tool.py) opens an MCP session, selects a profile and calls one tool
@@ -246,5 +269,6 @@ db2-genius-chat/
     style.css
   examples/
     call_tool.py   standalone Python example: one MCP tool call, no SDK
+    add_databases.csv  bulk-import template for Genius Hub connection profiles
   .env.example     configuration template
 ```
