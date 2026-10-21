@@ -1,0 +1,20 @@
+{
+  "name": "db2-genius-chat",
+  "version": "1.0.0",
+  "description": "Ask natural-language questions about your Db2 estate through the Db2 Genius Hub MCP server",
+  "type": "module",
+  "main": "server.js",
+  "scripts": {
+    "start": "node --env-file-if-exists=.env server.js"
+  },
+  "engines": {
+    "node": ">=22"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.32.1",
+    "dompurify": "^3.2.6",
+    "express": "^4.21.2",
+    "marked": "^16.0.0",
+    "undici": "^7.0.0"
+  }
+}

@@ -1,0 +1,252 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Db2 Genius Chat</title>
+  <link rel="icon" href="favicon.svg" type="image/svg+xml">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<!-- ============ Login ============ -->
+<main id="login-view" class="login" hidden>
+  <form id="login-form" class="card" autocomplete="on">
+    <h1>Db2 Genius Chat</h1>
+    <p class="muted">Ask questions about your Db2 environment in plain English. Sign in with your Genius Hub account &ndash; a fresh token is requested for every session.</p>
+    <label>Genius Hub server
+      <input id="gh-host" type="text" disabled>
+    </label>
+    <label>User id
+      <input id="userid" name="username" type="text" autocomplete="username" required autofocus>
+    </label>
+    <label>Password
+      <input id="password" name="password" type="password" autocomplete="current-password" required>
+    </label>
+    <button id="login-btn" type="submit" class="primary">Sign in</button>
+    <p id="login-error" class="error" role="alert" hidden></p>
+    <button type="button" class="link" data-open-guide>How does this work? What is MCP?</button>
+  </form>
+</main>
+
+<!-- ============ App ============ -->
+<div id="app-view" class="app" hidden>
+  <header class="topbar">
+    <div class="brand">Db2 Genius Chat</div>
+    <div class="profile-picker">
+      <label for="profile-select">Database profile</label>
+      <select id="profile-select"></select>
+      <button id="refresh-profiles" class="icon" title="Reload profiles" aria-label="Reload profiles">&#x21bb;</button>
+    </div>
+    <div class="spacer"></div>
+    <span id="status" class="pill off">No profile</span>
+    <button class="ghost" data-open-guide title="How MCP works and how this app connects">How it works</button>
+    <button id="new-chat" class="ghost" title="Clear the conversation">New chat</button>
+    <span id="whoami" class="muted"></span>
+    <button id="logout" class="ghost">Sign out</button>
+  </header>
+
+  <div class="body">
+    <aside class="examples">
+      <h2>Try asking</h2>
+      <div id="examples"></div>
+    </aside>
+
+    <section class="chat">
+      <div id="messages" class="messages" aria-live="polite">
+        <div id="welcome" class="welcome">
+          <h2>What would you like to know?</h2>
+          <p id="welcome-hint" class="muted">Choose a database profile above, then pick an example on the left or type your own question.</p>
+        </div>
+      </div>
+      <form id="composer" class="composer">
+        <textarea id="input" rows="1" placeholder="Select a profile to start asking questions" disabled></textarea>
+        <button id="send" type="submit" class="primary" disabled>Send</button>
+      </form>
+      <p class="footnote">Answers come from live Genius Hub tools. Queries run read-only. Verify before acting on recommendations.</p>
+    </section>
+  </div>
+</div>
+
+
+<!-- ============ Guide dialog ============ -->
+<dialog id="guide" aria-labelledby="guide-title">
+  <div class="guide-head">
+    <h2 id="guide-title">How this app works</h2>
+    <button type="button" class="ghost" id="guide-close" aria-label="Close guide">Close</button>
+  </div>
+  <nav class="tabs" role="tablist">
+    <button role="tab" data-tab="what" aria-selected="true">What is MCP?</button>
+    <button role="tab" data-tab="flow" aria-selected="false">Request flow</button>
+    <button role="tab" data-tab="fleet" aria-selected="false">All databases</button>
+    <button role="tab" data-tab="connect" aria-selected="false">Connect</button>
+    <button role="tab" data-tab="session" aria-selected="false">My session</button>
+    <button role="tab" data-tab="tools" aria-selected="false">Tools</button>
+    <button role="tab" data-tab="help" aria-selected="false">Troubleshooting</button>
+  </nav>
+
+  <section class="tab" id="tab-what">
+    <h3>The problem</h3>
+    <p>An AI model knows a lot about Db2, but it cannot see <em>your</em> databases. Without a bridge it can only guess &ndash; which is how you get invented tablespace names and made-up numbers.</p>
+    <h3>The Model Context Protocol (MCP)</h3>
+    <p>MCP is an open standard that lets an AI application discover and call <strong>tools</strong> exposed by another system, using one common format. Think of it as a USB-C port for AI: any MCP client can plug into any MCP server.</p>
+    <div class="grid3">
+      <div class="box"><h4>MCP client</h4><p>The AI-facing application. In this demo that is <strong>this web app</strong>. IBM Bob, Claude Desktop and the Db2 Genius CLI are also MCP clients.</p></div>
+      <div class="box"><h4>MCP server</h4><p>Publishes a list of tools with names, descriptions and input schemas. Here: the <strong>Db2 Genius Hub MCP server</strong> (port 8000).</p></div>
+      <div class="box"><h4>Tools</h4><p>Functions such as <code>get_tablespace</code> or <code>analyze_lock_waits</code>. The server runs them against Db2 and returns structured results.</p></div>
+    </div>
+    <h3>Why it matters here</h3>
+    <ul>
+      <li><strong>Real data:</strong> every answer is built from a live tool result, not from the model's memory.</li>
+      <li><strong>Read-only &amp; governed:</strong> the Genius Hub MCP server runs read-only SQL and inherits the Genius Hub user's permissions.</li>
+      <li><strong>One question, whole estate:</strong> the same tools can be repeated across every database profile (see the <em>All databases</em> tab).</li>
+      <li><strong>Swap the brain freely:</strong> the model can be changed (Granite, Claude, GPT&hellip;) without touching the Db2 integration.</li>
+      <li><strong>Nothing to hand-code per question:</strong> add a tool on the server and every MCP client can use it.</li>
+    </ul>
+  </section>
+
+  <section class="tab" id="tab-flow" hidden>
+    <h3>What happens when you ask a question</h3>
+    <ol class="steps">
+      <li><strong>You type a question</strong> &ndash; e.g. &ldquo;Which tablespaces are almost full?&rdquo;</li>
+      <li><strong>The web app asks the LLM</strong> (here IBM Granite via Ollama), including a short list of the MCP tools that look relevant.</li>
+      <li><strong>The LLM chooses a tool</strong> and its arguments &ndash; it does not run anything itself. It replies &ldquo;call <code>get_tablespace</code> with these arguments&rdquo;.</li>
+      <li><strong>The web app calls the MCP server</strong> with that tool call over HTTP (Streamable HTTP transport).</li>
+      <li><strong>The MCP server queries Db2</strong> through Genius Hub, using the database profile you selected, and returns structured JSON.</li>
+      <li><strong>The LLM writes the answer</strong> from that JSON only. The raw rows also appear as a table so you can verify the answer.</li>
+    </ol>
+    <svg class="diagram" viewBox="0 0 760 150" role="img" aria-label="Browser to web app to LLM and MCP server to Genius Hub to Db2">
+      <defs><marker id="ah" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto"><path d="M0,0 L8,4 L0,8 z" fill="#6f6f6f"/></marker></defs>
+      <g font-size="12" text-anchor="middle" fill="#161616">
+        <rect x="4" y="50" width="100" height="50" rx="6" fill="#edf5ff" stroke="#0f62fe"/><text x="54" y="72">Browser</text><text x="54" y="88" fill="#6f6f6f">you</text>
+        <rect x="150" y="50" width="110" height="50" rx="6" fill="#edf5ff" stroke="#0f62fe"/><text x="205" y="72">This web app</text><text x="205" y="88" fill="#6f6f6f">MCP client</text>
+        <rect x="150" y="2" width="110" height="34" rx="6" fill="#f4f4f4" stroke="#8d8d8d"/><text x="205" y="24">LLM (Granite)</text>
+        <rect x="320" y="50" width="120" height="50" rx="6" fill="#defbe6" stroke="#198038"/><text x="380" y="72">Genius Hub</text><text x="380" y="88" fill="#6f6f6f">MCP server :8000</text>
+        <rect x="500" y="50" width="110" height="50" rx="6" fill="#f4f4f4" stroke="#8d8d8d"/><text x="555" y="72">Genius Hub</text><text x="555" y="88" fill="#6f6f6f">API :11100</text>
+        <rect x="650" y="50" width="100" height="50" rx="6" fill="#f4f4f4" stroke="#8d8d8d"/><text x="700" y="72">Db2</text><text x="700" y="88" fill="#6f6f6f">your profile</text>
+      </g>
+      <g stroke="#6f6f6f" stroke-width="1.5" marker-end="url(#ah)" fill="none">
+        <line x1="104" y1="75" x2="148" y2="75"/><line x1="260" y1="75" x2="318" y2="75"/><line x1="440" y1="75" x2="498" y2="75"/><line x1="610" y1="75" x2="648" y2="75"/><line x1="205" y1="50" x2="205" y2="38"/>
+      </g>
+      <g font-size="11" fill="#6f6f6f" text-anchor="middle">
+        <text x="126" y="68">1</text><text x="289" y="68">4 tool call</text><text x="469" y="68">5</text><text x="629" y="68">SQL</text><text x="226" y="46" text-anchor="start">2/3/6 prompt &amp; answer</text>
+      </g>
+      <text x="380" y="130" font-size="11" fill="#6f6f6f" text-anchor="middle">Every request carries the Genius Hub token in the X-Genius-Hub-Token header</text>
+    </svg>
+    <p class="note">For questions that span every database, see the <strong>All databases</strong> tab. Tip: the green chips under your question show exactly which MCP tools ran. Hover a chip to see the arguments the model chose, and click it to see the timing.</p>
+  </section>
+
+  <section class="tab" id="tab-fleet" hidden>
+    <h3>Asking about your whole estate</h3>
+    <p>MCP tools work on <strong>one database at a time</strong>: you connect to a profile, then call a tool. To answer &ldquo;which databases have&hellip;?&rdquo; this app repeats the same tool call for every profile and compares the results. Pick <strong>All databases</strong> in the dropdown, or just ask a question containing &ldquo;all databases&rdquo;, &ldquo;which databases&rdquo; and so on.</p>
+    <ol class="steps">
+      <li><strong>Understand the question</strong> &ndash; topic (space, backup, resources, health) and time window (&ldquo;this week&rdquo; = 7 days).</li>
+      <li><strong>List the profiles</strong> with <code>fetch_dic_db_profiles</code>.</li>
+      <li><strong>For each profile:</strong> <code>connect_to_profile</code>, then the relevant tools (below).</li>
+      <li><strong>Judge each result</strong> against fixed thresholds and sort the worst databases to the top.</li>
+    </ol>
+    <table class="rules-table">
+      <thead><tr><th>Question about&hellip;</th><th>MCP tools called per database</th><th>Flagged when</th></tr></thead>
+      <tbody>
+        <tr><td>Space</td><td><code>get_tablespace</code></td><td>any tablespace &ge;80% (warning) or &ge;95% (critical)</td></tr>
+        <tr><td>Backups</td><td><code>fetch_db_history</code></td><td>newest successful backup older than the window (warning), older than 30 days or none (critical)</td></tr>
+        <tr><td>Resources</td><td><code>get_cpu_summary</code>, <code>get_memory_summary</code>, <code>get_bufferpool_statistics</code>, <code>analyze_lock_waits</code></td><td>CPU avg &ge;70%, buffer pool hit ratio &lt;90%, any lock wait</td></tr>
+        <tr><td>Health</td><td><code>perform_database_health_check</code></td><td>real findings reported by the tool</td></tr>
+      </tbody>
+    </table>
+    <h3>Why the AI model is not used here</h3>
+    <p>Comparing five or five hundred databases against thresholds is exact arithmetic. A fixed rule gives the same answer every time and cannot invent a number, so the app does this part in code and uses the AI model for open-ended questions about <em>one</em> database. This is a good pattern to explain to customers: <strong>use the LLM for language, use code for rules.</strong></p>
+    <h3>Reading the results</h3>
+    <ul>
+      <li><strong>No data</strong> means a tool returned nothing usable &ndash; it is not counted as a problem.</li>
+      <li>A database that cannot be reached is shown as <strong>Critical</strong> with the error.</li>
+      <li>&ldquo;No backup recorded in Db2 history&rdquo; means Db2&rsquo;s own history file is empty. Backups taken by external tools that do not write to Db2 history will appear this way.</li>
+      <li>Thresholds are constants at the top of <code>fleet.js</code>; adjust them to your client&rsquo;s standards.</li>
+      <li>Cost: a full check is about 4&ndash;9 MCP calls per database and takes roughly 1&ndash;3 seconds each; the demo&rsquo;s 5 databases took 5&ndash;11 seconds.</li>
+    </ul>
+  </section>
+
+  <section class="tab" id="tab-connect" hidden>
+    <h3>How the app connects</h3>
+    <p>Signing in does three things, in order. A <strong>new token is requested every time you sign in</strong>, so no long-lived token is ever stored in a file.</p>
+    <div class="code-head">1. Request a token from Genius Hub</div>
+    <pre><code id="code-token"># export GH_USER and GH_PASSWORD first, so the password never sits in your shell history
+curl -X POST '&lt;protocol&gt;://&lt;host&gt;:&lt;port&gt;/dbapi/v4/auth/tokens' \
+  -H 'Content-Type: application/json' \
+  -d "{\"userid\": \"$GH_USER\", \"password\": \"$GH_PASSWORD\"}"
+# &rarr; {"userid":"&lt;user&gt;","token":"eyJraWQi..."}</code></pre>
+    <div class="code-head">2. Open an MCP session, passing the token as headers</div>
+    <pre><code id="code-headers">POST &lt;mcp-url&gt;
+X-Genius-Hub-Hostname: &lt;host&gt;
+X-Genius-Hub-Port:     &lt;port&gt;
+X-Genius-Hub-Protocol: &lt;protocol&gt;
+X-Genius-Hub-Token:    &lt;token&gt;</code></pre>
+    <div class="code-head">3. Pick a database profile</div>
+    <p>The app calls <code>fetch_dic_db_profiles</code> to fill the dropdown, then <code>connect_to_profile</code> when you choose one. Every later tool call runs against that database.</p>
+    <h3>Using the same server from IBM Bob (or any MCP client)</h3>
+    <p>Add this to <code>.bob/mcp.json</code>. Prefer an environment variable over pasting the token, because tokens expire.</p>
+    <pre><code id="code-bob">{
+  "mcpServers": {
+    "db2-genius-mcp": {
+      "type": "streamable-http",
+      "url": "&lt;mcp-url&gt;",
+      "headers": {
+        "X-Genius-Hub-Hostname": "&lt;host&gt;",
+        "X-Genius-Hub-Port": "&lt;port&gt;",
+        "X-Genius-Hub-Protocol": "&lt;protocol&gt;",
+        "X-Genius-Hub-Token": "${env:GENIUS_HUB_TOKEN}"
+      },
+      "disabled": false
+    }
+  }
+}</code></pre>
+    <h3>Security notes</h3>
+    <ul>
+      <li>Your password goes only to Genius Hub to obtain the token; this app never stores it.</li>
+      <li>The token stays on the app's server. The browser only holds an opaque session cookie.</li>
+      <li>Sessions are closed (MCP <code>logout</code>) on sign-out and after <span id="idle-min">30</span> idle minutes.</li>
+      <li id="tls-note" hidden>TLS verification is <strong>off</strong> for the MCP endpoint because it uses a self-signed certificate. Install a CA-signed certificate and set <code>INSECURE_TLS=false</code> for production.</li>
+    </ul>
+  </section>
+
+  <section class="tab" id="tab-session" hidden>
+    <h3>Your live session</h3>
+    <p id="session-empty" class="muted">Sign in to see the details of your connection.</p>
+    <dl id="session-info" class="kv" hidden></dl>
+    <h3>Configuration of this app</h3>
+    <dl id="config-info" class="kv"></dl>
+  </section>
+
+  <section class="tab" id="tab-tools" hidden>
+    <h3>Tools published by the MCP server</h3>
+    <p id="tools-empty" class="muted">Sign in to load the live tool list from your Genius Hub.</p>
+    <p id="tools-summary" hidden></p>
+    <div id="tools-list"></div>
+  </section>
+
+  <section class="tab" id="tab-help" hidden>
+    <h3>Troubleshooting</h3>
+    <dl class="faq">
+      <dt>&ldquo;Invalid Genius Hub user id or password&rdquo;</dt>
+      <dd>The token request was rejected. Check the credentials in the Genius Hub web console.</dd>
+      <dt>&ldquo;Could not reach the Genius Hub MCP server&rdquo;</dt>
+      <dd>Confirm the MCP server is running and port 8000 is reachable from the machine running this app: <code>curl -k https://&lt;host&gt;:8000/mcp</code> (an HTTP 4xx/406 reply still proves it is listening). Check <code>MCP_URL</code> in <code>.env</code>.</dd>
+      <dt>&ldquo;Session expired&rdquo;</dt>
+      <dd>Sessions end after idle time, a server restart, or when the Genius Hub token expires. Sign in again &ndash; a new token is fetched automatically.</dd>
+      <dt>&ldquo;I can&rsquo;t answer this from live data&rdquo;</dt>
+      <dd>A Db2 tool call failed and could not be recovered, so the app refuses to guess. The real reason is shown. If the MCP session was simply dropped, the app reconnects and retries by itself (see <em>My session</em>).</dd>
+      <dt>The profile dropdown is empty</dt>
+      <dd>Genius Hub has no database profiles for this user. Add one in the Genius Hub console, then press the reload button next to the dropdown.</dd>
+      <dt>Answers are slow</dt>
+      <dd>A CPU-hosted model needs 20&ndash;90 seconds per question. The tool chips show progress; the Db2 call itself normally takes about a second.</dd>
+      <dt>The model answered without using a tool</dt>
+      <dd>Small models sometimes skip tools. Rephrase with a clear action (&ldquo;Show me&hellip;&rdquo;, &ldquo;List&hellip;&rdquo;) or use one of the examples.</dd>
+    </dl>
+  </section>
+</dialog>
+
+<script src="/vendor/marked.js"></script>
+<script src="/vendor/purify.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
