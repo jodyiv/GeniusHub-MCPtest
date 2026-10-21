@@ -28,6 +28,7 @@ Air-gapped
 https://community.ibm.com/community/user/blogs/merlin-moncy/2026/05/26/air-gapped-ai-inferencing-db2-genius-hub
 
 Check the connection to the MCP server:
+
 		nc -zv db2server 8000                       # is the port open?
 		curl -k -i https://db2server:8000/mcp       # 400 or 406 = alive; "connection refused" = not running
 
