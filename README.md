@@ -90,17 +90,40 @@ To use the *same* MCP server from IBM Bob or another client, add to `.bob/mcp.js
 }
 ```
 
+### Adding databases to Genius Hub
+
+MCP has no database list of its own: it exposes the connection profiles defined in Genius Hub
+(`fetch_dic_db_profiles`). Add databases there and they appear in this app's dropdown after you press the reload button.
+
+[`examples/add_databases.csv`](db2-genius-chat/examples/add_databases.csv) is a bulk-import template. Replace the example hosts
+with your own, then in Genius Hub go to **Administration > Connection profile > New connection > Import connections
+from file**, select the CSV and pick the profiles to add.
+
+| Column | Value |
+|---|---|
+| `name` | Profile name shown in MCP and in this app's dropdown (unique) |
+| `host`, `port`, `databaseName` | Where the Db2 database lives |
+| `dataServerType`, `dataServerExternalType` | `DB2LUW` (Db2 on Linux, Unix and Windows) |
+| `URL` | `jdbc:db2://<host>:<port>/<database>:retrieveMessagesFromServerOnGetMessage=true;` |
+| `comment`, `tag` | Optional; tags help group databases |
+| `location`, `xtraProps` | Leave empty |
+
+The file holds no passwords. After importing, set each database's monitoring (data collection) credential with
+**Update credentials** on the Connection profile page; until then Genius Hub, and therefore MCP, cannot read it.
+To see the exact format for your version, export your existing profiles first:
+`GET /dbapi/v4/dbprofiles/transfer/export` (add `?json=true` for JSON).
+
 ### Use it from Python
 
-[`examples/call_tool.py`](examples/call_tool.py) opens an MCP session, selects a profile and calls one tool
+[`examples/call_tool.py`](db2-genius-chat/examples/call_tool.py) opens an MCP session, selects a profile and calls one tool
 (`get_tablespace`). It needs only `pip install httpx`, no MCP SDK, so it also shows what is on the wire.
 
 ```bash
 # log in with a user and password (a fresh token is requested)
-GH_USER=<user> GH_PASSWORD=<password> python3 examples/call_tool.py
+GH_USER=<user> GH_PASSWORD=<password> python3 db2-genius-chat/examples/call_tool.py
 
 # ...or reuse a token you already have
-GH_TOKEN=<token> python3 examples/call_tool.py
+GH_TOKEN=<token> python3 db2-genius-chat/examples/call_tool.py
 ```
 
 Optional variables: `GH_HOST` (default `db2server`), `GH_PORT` (`11100`), `GH_PROTOCOL` (`http`),
@@ -176,7 +199,7 @@ a tool-call trace, and a "How these were judged" panel.
 
 **Why this part does not use the LLM.** Comparing databases against thresholds is arithmetic: code is
 exact, repeatable and cannot invent a number. The LLM is used for open-ended questions about one
-database. All rules live in [`fleet.js`](fleet.js) (`THRESHOLDS`), so they are easy to tune to a
+database. All rules live in [`fleet.js`](db2-genius-chat/fleet.js) (`THRESHOLDS`), so they are easy to tune to a
 client's standards. The logic is covered by the pure functions `evalSpace`, `evalBackup`,
 `evalResources` and `evalHealth`, which are easy to unit-test.
 
@@ -246,5 +269,6 @@ db2-genius-chat/
     style.css
   examples/
     call_tool.py   standalone Python example: one MCP tool call, no SDK
+    add_databases.csv  bulk-import template for Genius Hub connection profiles
   .env.example     configuration template
 ```
